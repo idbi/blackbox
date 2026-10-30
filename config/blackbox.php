@@ -152,15 +152,15 @@ return [
     | Sink
     |--------------------------------------------------------------------------
     |
-    | One JSON line per request, appended after the response is sent. `{date}`
-    | is replaced with the UTC date so files rotate daily. Use php://stderr
+    | One JSON line per request, appended after the response is sent. Add
+    | `{date}` to the path to get one file per UTC day. Use php://stderr
     | to write to the container log instead.
     |
     */
 
     'sink' => [
         'driver' => StreamSink::class,
-        'path' => env('BLACKBOX_PATH', storage_path('logs/blackbox-{date}.jsonl')),
+        'path' => env('BLACKBOX_PATH', storage_path('logs/blackbox.jsonl')),
         'lock' => true,
     ],
 
