@@ -1,0 +1,69 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Pint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: none
+      - run: composer update --prefer-dist --no-interaction --no-progress
+      - run: vendor/bin/pint --test
+
+  tests:
+    name: PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { laravel: '8',  testbench: '^6.0',  php: '8.1' }
+          - { laravel: '9',  testbench: '^7.0',  php: '8.1' }
+          - { laravel: '9',  testbench: '^7.0',  php: '8.2' }
+          - { laravel: '10', testbench: '^8.0',  php: '8.1' }
+          - { laravel: '10', testbench: '^8.0',  php: '8.3' }
+          - { laravel: '11', testbench: '^9.0',  php: '8.2' }
+          - { laravel: '11', testbench: '^9.0',  php: '8.4' }
+          - { laravel: '12', testbench: '^10.0', php: '8.2' }
+          - { laravel: '12', testbench: '^10.0', php: '8.5' }
+          - { laravel: '13', testbench: '^11.0', php: '8.3' }
+          - { laravel: '13', testbench: '^11.0', php: '8.5', coverage: true }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, zlib
+          coverage: ${{ matrix.coverage && 'pcov' || 'none' }}
+      - name: Install Laravel ${{ matrix.laravel }}
+        # Laravel 8-11 are end-of-life and have open advisories; Composer blocks
+        # them by default. Only this test install opts out, not the package.
+        env:
+          COMPOSER_NO_SECURITY_BLOCKING: 1
+        run: |
+          composer remove --dev laravel/pint --no-update --no-interaction
+          composer require --dev "orchestra/testbench:${{ matrix.testbench }}" --no-update --no-interaction
+          composer update --prefer-dist --no-interaction --no-progress --with-all-dependencies
+      - name: Tests
+        if: ${{ !matrix.coverage }}
+        run: vendor/bin/phpunit
+      - name: Tests with coverage
+        if: ${{ matrix.coverage }}
+        run: |
+          vendor/bin/phpunit --coverage-filter src --coverage-text --coverage-clover build/coverage.xml
+          php .github/scripts/coverage-check.php build/coverage.xml 95
