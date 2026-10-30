@@ -94,8 +94,8 @@ return [
     */
 
     'except' => [
-        'health',
-        'up',
+        'livez',
+        'readyz',
         'horizon/*',
         'telescope/*',
         '_debugbar/*',
