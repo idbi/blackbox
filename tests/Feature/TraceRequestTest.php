@@ -170,9 +170,12 @@ class TraceRequestTest extends TestCase
 
     public function test_excluded_paths_are_not_recorded(): void
     {
-        $response = $this->callAndTerminate('GET', '/health');
+        foreach (['/livez', '/readyz'] as $path) {
+            $response = $this->callAndTerminate('GET', $path);
 
-        $this->assertTrue($response->headers->has('X-Request-Id'));
+            $this->assertTrue($response->headers->has('X-Request-Id'));
+        }
+
         $this->assertSame([], $this->records());
     }
 

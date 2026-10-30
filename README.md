@@ -200,7 +200,7 @@ Check Loki's `limits_config.max_line_size`: lines above it are rejected unless `
 | `user.guards` | `null` (all) | guards to read the user from |
 | `user.attributes` | `[]` | extra user fields, e.g. `['uuid']` |
 | `user.resolver`, `tenant.resolver` | `null` | invokable class, `fn (Request $request)` |
-| `except` | health, up, horizon, telescope, debugbar | `Request::is()` patterns that are not recorded |
+| `except` | livez, readyz, horizon, telescope, debugbar | `Request::is()` patterns that are not recorded |
 | `sampling` | `['*' => 1.0]` | rate per HTTP method, e.g. `['GET' => 0.1]` |
 | `headers.only` | `[]` (all) | record only these headers |
 | `headers.redact`, `payload.redact` | auth, cookies, passwords, tokens, `card*`, `cvv`… | partially masked keys |

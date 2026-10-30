@@ -28,7 +28,8 @@ abstract class TestCase extends Orchestra
     {
         $router->middleware(TraceRequest::class)->group(function ($router) {
             $router->any('/echo', fn () => response()->json(['ok' => true]))->name('echo');
-            $router->get('/health', fn () => 'ok');
+            $router->get('/livez', fn () => 'ok');
+            $router->get('/readyz', fn () => 'ok');
         });
     }
 
