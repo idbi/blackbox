@@ -61,7 +61,7 @@ Measured with `php bench/middleware.php`:
 
 ## The audit record
 
-One JSON line per request in `storage/logs/blackbox-YYYY-MM-DD.jsonl` (UTC date). `php://stderr` works too.
+One JSON line per request in `storage/logs/blackbox.jsonl`. `php://stderr` works too.
 
 ```json
 {"ts":"2026-10-29T15:04:05.123Z","request_id":"4f0c2a9e…","session_id":"8812…",
@@ -112,7 +112,7 @@ Keys are case-insensitive and accept `*` wildcards (`card*`). A sensitive key ho
 Payloads are stored as inline JSON so Loki can filter on them. When the JSON is larger than `payload.gzip_above_bytes` (64 KB), it's gzipped and base64-encoded instead, and `payload_encoding` becomes `json+gzip`. A 124 KB import with 1,000 items takes 20 KB. Decode one with:
 
 ```bash
-jq -r 'select(.payload_encoding == "json+gzip") | .payload' blackbox-2026-10-30.jsonl \
+jq -r 'select(.payload_encoding == "json+gzip") | .payload' blackbox.jsonl \
   | head -1 | base64 -d | gunzip | jq
 ```
 
@@ -122,7 +122,7 @@ Below about 1 KB, gzip plus base64 is larger than the JSON itself, which is why 
 
 ```alloy
 local.file_match "blackbox" {
-  path_targets = [{"__path__" = "/var/www/app/storage/logs/blackbox-*.jsonl"}]
+  path_targets = [{"__path__" = "/var/www/app/storage/logs/blackbox.jsonl"}]
 }
 
 loki.source.file "blackbox" {
@@ -167,7 +167,7 @@ Query it with LogQL:
 Keep local files small with logrotate; Alloy follows rotated files and Loki compresses on its side:
 
 ```
-/var/www/app/storage/logs/blackbox-*.jsonl {
+/var/www/app/storage/logs/blackbox.jsonl {
     daily
     maxsize 100M
     rotate 2
@@ -206,7 +206,7 @@ Check Loki's `limits_config.max_line_size`: lines above it are rejected unless `
 | `headers.redact`, `payload.redact` | auth, cookies, passwords, tokens, `card*`, `cvv`… | partially masked keys |
 | `payload.gzip_above_bytes` | `65536` | gzip larger payloads; `0` disables |
 | `payload.raw` | `true` | keep bodies that are neither JSON nor form |
-| `sink.path` | `storage/logs/blackbox-{date}.jsonl` | `{date}` is the UTC day |
+| `sink.path` | `storage/logs/blackbox.jsonl` | add `{date}` for one file per UTC day |
 | `log_context` | `true` | ids and `user_id` in every log line |
 | `sentry.enabled`, `sentry.tags` | `true`, `request_id`, `session_id` | |
 | `queue.propagate` | `true` | carry the ids into queued jobs |
